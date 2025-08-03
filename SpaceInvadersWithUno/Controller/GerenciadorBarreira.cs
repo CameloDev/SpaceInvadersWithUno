@@ -5,7 +5,9 @@ namespace SpaceInvadersWithUno;
     using Windows.Storage.Streams;
     using System.IO;
     using System.Runtime.InteropServices.WindowsRuntime;
-    public class GerenciadorBarreiras
+using Microsoft.UI;
+
+public class GerenciadorBarreiras
 {
     private readonly PaginaJogo _paginaJogo;
     public List<Barreira> Barreiras { get; private set; }
@@ -40,42 +42,52 @@ namespace SpaceInvadersWithUno;
 
     public void ReceberDano(Barreira barreira, Point pontoImpactoLocal)
     {
-        int x = (int)pontoImpactoLocal.X;
-        int y = (int)pontoImpactoLocal.Y;
-
         if (barreira.Bitmap == null)
             return;
 
-        int tamanhoDano = 5;  // Largura/altura do quadrado de pixels que serão apagados
+        int x = (int)pontoImpactoLocal.X;
+        int y = (int)pontoImpactoLocal.Y;
+
+        int tamanhoDano = 10;
         int raio = tamanhoDano / 2;
 
         int larguraBitmap = barreira.Bitmap.PixelWidth;
         int alturaBitmap = barreira.Bitmap.PixelHeight;
         int stride = larguraBitmap * 4;
+        var pixelsParaApagar = new List<(int dx, int dy)>();
+
+        for (int dy = -raio; dy <= raio; dy++)
+        {
+            for (int dx = -raio; dx <= raio; dx++)
+            {
+                if (dx * dx + dy * dy <= raio * raio)
+                {
+                    pixelsParaApagar.Add((dx, dy));
+                }
+            }
+        }
+
+        pixelsParaApagar = pixelsParaApagar
+            .OrderBy(p => p.dx * p.dx + p.dy * p.dy)
+            .ToList();
 
         using (var buffer = barreira.Bitmap.PixelBuffer.AsStream())
         {
-            for (int dy = -raio; dy <= raio; dy++)
+            foreach (var (dx, dy) in pixelsParaApagar)
             {
+                int pixelX = x + dx;
                 int pixelY = y + dy;
-                if (pixelY < 0 || pixelY >= alturaBitmap)
+
+                if (pixelX < 0 || pixelX >= larguraBitmap || pixelY < 0 || pixelY >= alturaBitmap)
                     continue;
 
-                for (int dx = -raio; dx <= raio; dx++)
-                {
-                    int pixelX = x + dx;
-                    if (pixelX < 0 || pixelX >= larguraBitmap)
-                        continue;
+                int offset = pixelY * stride + pixelX * 4;
+                buffer.Seek(offset, SeekOrigin.Begin);
 
-                    int offset = pixelY * stride + pixelX * 4;
-                    buffer.Seek(offset, SeekOrigin.Begin);
-
-                    // Apaga pixel RGBA (preto transparente)
-                    buffer.WriteByte(0); // R
-                    buffer.WriteByte(0); // G
-                    buffer.WriteByte(0); // B
-                    buffer.WriteByte(0); // A
-                }
+                buffer.WriteByte(0);
+                buffer.WriteByte(0);
+                buffer.WriteByte(0);
+                buffer.WriteByte(0);
             }
         }
 
@@ -86,6 +98,7 @@ namespace SpaceInvadersWithUno;
             RemoverBarreira(barreira);
         }
     }
+
 
     private bool IsBitmapVazio(WriteableBitmap bitmap)
     {
@@ -127,8 +140,31 @@ namespace SpaceInvadersWithUno;
         var bitmap = new WriteableBitmap(width, height);
         using (var buffer = bitmap.PixelBuffer.AsStream())
         {
-            byte[] whitePixels = Enumerable.Repeat((byte)255, width * height * 4).ToArray(); // RGBA
-            buffer.Write(whitePixels, 0, whitePixels.Length);
+            byte[] pixels = new byte[width * height * 4];
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    bool pintarPixel = false;
+                    if (y < height / 5)
+                        pintarPixel = true;
+
+                    if ((x < width / 5 || x > width - width / 5) && y < height * 0.8)
+                        pintarPixel = true;
+
+                    if (pintarPixel)
+                    {
+                        int index = (y * width + x) * 4;
+                        pixels[index + 0] = 30;   
+                        pixels[index + 1] = 255; 
+                        pixels[index + 2] = 30;   
+                        pixels[index + 3] = 255; 
+                    }
+                }
+            }
+
+            buffer.Write(pixels, 0, pixels.Length);
         }
 
         barreira.Bitmap = bitmap;
@@ -137,7 +173,7 @@ namespace SpaceInvadersWithUno;
         {
             Source = bitmap,
             Width = width,
-            Height = height
+            Height = height,
         };
     }
 

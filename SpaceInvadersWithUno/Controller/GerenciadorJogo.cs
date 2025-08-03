@@ -2,6 +2,7 @@ namespace SpaceInvadersWithUno;
 
     using Windows.Foundation;
     using Microsoft.UI.Xaml.Shapes;
+    using System.Runtime.InteropServices.WindowsRuntime;
 public class GerenciadorJogo
 {
     private readonly PaginaJogo _paginaJogo;
@@ -56,16 +57,15 @@ public class GerenciadorJogo
         var projetilJogador = _gerenciadorProjeteis.ProjetilJogador;
         if (projetilJogador != null)
         {
-            var retProjetil = new Rect(projetilJogador.X, projetilJogador.Y,
-                                    projetilJogador.Largura, projetilJogador.Altura);
+            var retProjetil = ExpandirRetangulo(new Rect(projetilJogador.X, projetilJogador.Y,
+                                                        projetilJogador.Largura, projetilJogador.Altura), 4);
 
-        
             foreach (var inimigo in _gerenciadorInimigos.Inimigos.ToList())
             {
                 var retInimigo = new Rect(inimigo.PosicaoX, inimigo.PosicaoY,
                                         inimigo.Largura, inimigo.Altura);
 
-                var intersec = retProjetil; 
+                var intersec = retProjetil;
                 intersec.Intersect(retInimigo);
 
                 if (!intersec.IsEmpty)
@@ -75,40 +75,76 @@ public class GerenciadorJogo
                     AdicionarPontuacao(inimigo.Pontuacao);
                     break;
                 }
-
             }
-
-            foreach (var barreira in _gerenciadorBarreiras.Barreiras.ToList())
+            foreach (var barreira in _gerenciadorBarreiras.Barreiras
+                                            .OrderBy(b => b.PosicaoX)
+                                            .ToList())
             {
                 var retBarreira = new Rect(barreira.PosicaoX, barreira.PosicaoY,
-                                        barreira.Largura, barreira.Altura);
+                                            barreira.Largura, barreira.Altura);
 
                 var intersec = retProjetil;
                 intersec.Intersect(retBarreira);
 
-                if (!intersec.IsEmpty && projetilJogador.ElementoUI is Rectangle elementoUI)
+                if (!intersec.IsEmpty && projetilJogador.ElementoUI is Rectangle)
                 {
                     double escalaX = (double)barreira.Bitmap!.PixelWidth / barreira.Largura;
                     double escalaY = (double)barreira.Bitmap.PixelHeight / barreira.Altura;
 
-                    double impactoLocalX = (projetilJogador.X - barreira.PosicaoX) * escalaX;
-                    double impactoLocalY = (projetilJogador.Y - barreira.PosicaoY) * escalaY;
+                    double impactoLocalXraw = (projetilJogador.X + projetilJogador.Largura / 2 - barreira.PosicaoX) * escalaX;
+                    int impactoLocalX = Math.Clamp((int)Math.Round(impactoLocalXraw), 0, barreira.Bitmap.PixelWidth - 1);
 
-                    Point pontoImpactoLocal = new Point(impactoLocalX, impactoLocalY);
+                    double impactoLocalYraw = (projetilJogador.Y - barreira.PosicaoY) * escalaY;
+                    int impactoLocalY = Math.Clamp((int)Math.Round(impactoLocalYraw), 0, barreira.Bitmap.PixelHeight - 1);
 
-                    _gerenciadorBarreiras.ReceberDano(barreira, pontoImpactoLocal);
-                    _gerenciadorProjeteis.RemoverProjetilJogador();
-                    break;
+                    int largura = barreira.Bitmap.PixelWidth;
+                    int altura = barreira.Bitmap.PixelHeight;
+
+                    if (impactoLocalX < 0 || impactoLocalX >= largura || impactoLocalY < 0 || impactoLocalY >= altura)
+                        continue;
+
+                    using (var buffer = barreira.Bitmap.PixelBuffer.AsStream())
+                    {
+                        int tamanhoBuffer = largura * altura * 4;
+
+                      
+                        for (int y = impactoLocalY; y >= 0; y--)
+                        {
+                            int offset = (y * largura + impactoLocalX) * 4;
+                            if (offset + 4 > tamanhoBuffer)
+                                break;
+
+                            buffer.Seek(offset, SeekOrigin.Begin);
+                            byte[] pixel = new byte[4];
+                            int bytesLidos = buffer.Read(pixel, 0, 4);
+                            if (bytesLidos != 4)
+                                break;
+
+                            byte alpha = pixel[3];
+
+                            if (alpha > 0)
+                            {
+                                var pontoImpactoNoLoop = new Point(impactoLocalX, y);
+
+                                _gerenciadorBarreiras.ReceberDano(barreira, pontoImpactoNoLoop);
+                                _gerenciadorProjeteis.RemoverProjetilJogador();
+                                goto fimLoop;
+                            }
+                        }
+                    }
                 }
+            fimLoop:;
             }
         }
 
         foreach (var projetil in _gerenciadorProjeteis.ProjeteisInimigos.ToList())
         {
-            var retProjetil = new Rect(projetil.X, projetil.Y,
-                                    projetil.Largura, projetil.Altura);
+            var retProjetil = ExpandirRetangulo(new Rect(projetil.X, projetil.Y,
+                                                        projetil.Largura, projetil.Altura), 4);
 
-            foreach (var barreira in _gerenciadorBarreiras.Barreiras.ToList())
+            foreach (var barreira in _gerenciadorBarreiras.Barreiras
+                                            .OrderByDescending(b => b.PosicaoX)
+                                            .ToList())
             {
                 var retBarreira = new Rect(barreira.PosicaoX, barreira.PosicaoY,
                                         barreira.Largura, barreira.Altura);
@@ -116,20 +152,62 @@ public class GerenciadorJogo
                 var intersec = retProjetil;
                 intersec.Intersect(retBarreira);
 
-                if (!intersec.IsEmpty && projetil.ElementoUI is Rectangle elementoUI)
+                if (!intersec.IsEmpty && projetil.ElementoUI is Rectangle)
                 {
                     double escalaX = (double)barreira.Bitmap!.PixelWidth / barreira.Largura;
                     double escalaY = (double)barreira.Bitmap.PixelHeight / barreira.Altura;
 
-                    double impactoLocalX = (projetil.X - barreira.PosicaoX) * escalaX;
-                    double impactoLocalY = (projetil.Y - barreira.PosicaoY) * escalaY;
+                    double impactoLocalXraw = (projetil.X + projetil.Largura / 2 - barreira.PosicaoX) * escalaX;
+                    int impactoLocalX = (int)Math.Round(impactoLocalXraw);
+                    impactoLocalX = Math.Clamp(impactoLocalX, 0, barreira.Bitmap.PixelWidth - 1);
 
-                    Point pontoImpactoLocal = new Point(impactoLocalX, impactoLocalY);
+                    double impactoLocalYraw = (projetil.Y + projetil.Altura - barreira.PosicaoY) * escalaY;
+                    int impactoLocalY = (int)Math.Round(impactoLocalYraw);
+                    impactoLocalY = Math.Clamp(impactoLocalY, 0, barreira.Bitmap.PixelHeight - 1);
 
-                    _gerenciadorBarreiras.ReceberDano(barreira, pontoImpactoLocal);
-                    _gerenciadorProjeteis.RemoverProjetilInimigo(projetil);
-                    break;
+                    int largura = barreira.Bitmap.PixelWidth;
+                    int altura = barreira.Bitmap.PixelHeight;
+
+                    int x = (int)impactoLocalX;
+                    int yStart = (int)impactoLocalY;
+
+                    if (x < 0 || x >= largura)
+                        continue;
+
+                    if (yStart < 0 || yStart >= altura)
+                        continue;
+
+                    using (var buffer = barreira.Bitmap.PixelBuffer.AsStream())
+                    {
+                        int tamanhoBuffer = largura * altura * 4;
+
+                        for (int y = yStart; y < altura; y++)
+                        {
+                            int offset = (y * largura + x) * 4;
+                            if (offset + 4 > tamanhoBuffer)
+                                break;
+
+                            buffer.Seek(offset, SeekOrigin.Begin);
+                            byte[] pixel = new byte[4];
+                            int bytesLidos = buffer.Read(pixel, 0, 4);
+
+                            if (bytesLidos != 4)
+                                break;
+
+                            byte alpha = pixel[3];
+
+                            if (alpha > 0)
+                            {
+                                var pontoImpactoNoLoop = new Point(x, y);
+
+                                _gerenciadorBarreiras.ReceberDano(barreira, pontoImpactoNoLoop);
+                                _gerenciadorProjeteis.RemoverProjetilInimigo(projetil);
+                                goto fimLoop;
+                            }
+                        }
+                    }
                 }
+            fimLoop:;
             }
 
             if (_gerenciadorProjeteis.ProjeteisInimigos.Contains(projetil))
@@ -154,6 +232,17 @@ public class GerenciadorJogo
             }
         }
     }
+
+    private Rect ExpandirRetangulo(Rect original, double pixels)
+    {
+        return new Rect(
+            original.X - pixels,
+            original.Y - pixels,
+            original.Width + pixels * 2,
+            original.Height + pixels * 2
+        );
+    }
+
 
     private void VerificarOndaCompleta()
     {
@@ -181,6 +270,10 @@ public class GerenciadorJogo
         else if (_gerenciadorInimigos.InimigosChegaramAbaixo())
         {
             FimDeJogo("Inimigos passaram suas defesas!");
+        }
+        else if (Pontuacao >= 500)
+        {
+            FimDeJogo("Total de pontos alcançado");
         }
     }
 
