@@ -34,7 +34,7 @@ public class GerenciadorJogo
         _gerenciadorInimigos.InicializarOnda(NumeroOnda);
         _gerenciadorBarreiras.InicializarBarreiras();
         _gerenciadorProjeteis.LimparProjeteis();
-
+        
         AtualizarUI();
     }
 
@@ -70,9 +70,12 @@ public class GerenciadorJogo
 
                 if (!intersec.IsEmpty)
                 {
+                    double x = inimigo.PosicaoX;
+                    double y = inimigo.PosicaoY;
                     _gerenciadorInimigos.RemoverInimigo(inimigo);
                     _gerenciadorProjeteis.RemoverProjetilJogador();
                     AdicionarPontuacao(inimigo.Pontuacao);
+                    _paginaJogo.MostrarExplosao(x, y);
                     break;
                 }
             }

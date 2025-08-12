@@ -66,7 +66,7 @@ namespace SpaceInvadersWithUno;
             };
 
             _gerenciadorProjeteis.AdicionarProjetilJogador(projetil);
-            _som.Play("Assets/shoot.wav");
+            _som.TocarSom("Assets/shoot.wav");
         }
         
 
@@ -84,8 +84,8 @@ namespace SpaceInvadersWithUno;
             if (vidasExtras > 0 && Jogador.Vidas < 6)
             {
                 Jogador.Vidas += vidasExtras;
-                _som.Play("Assets/vida_extra.wav");
-            }
+                _som.TocarSom("Assets/vida_extra.wav");
+            } // arrumando erro, quando recebe o primeiro dano o verify esta recebendo +1 antes dos 1000
         }
 
         public void TeclaPressionada(Windows.System.VirtualKey tecla)

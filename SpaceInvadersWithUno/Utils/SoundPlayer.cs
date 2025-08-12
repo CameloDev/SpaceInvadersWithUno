@@ -1,31 +1,66 @@
 using NAudio.Wave;
-namespace SpaceInvadersWithUno;
-    public class SoundPlayer : IDisposable
-    {
-        private IWavePlayer? outputDevice;
-        private AudioFileReader? audioFile;
+using System;
+using System.IO;
 
-        public void Play(string arquivo)
+namespace SpaceInvadersWithUno;
+
+    public class SoundPlayer
+    {
+        private WaveOutEvent? _waveOutLoop;
+        private LoopStream? _loopStream;
+        public void TocarSom(string caminho)
         {
             try
             {
-                outputDevice?.Dispose();
-                audioFile?.Dispose();
+                var ms = new MemoryStream(File.ReadAllBytes(caminho));
+                var reader = new WaveFileReader(ms);
+                var waveOut = new WaveOutEvent();
 
-                outputDevice = new WaveOutEvent();
-                audioFile = new AudioFileReader(arquivo);
-                outputDevice.Init(audioFile);
-                outputDevice.Play();
+                waveOut.Init(reader);
+                waveOut.Play();
+
+                waveOut.PlaybackStopped += (s, e) =>
+                {
+                    waveOut.Dispose();
+                    reader.Dispose();
+                    ms.Dispose();
+                };
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine($"Erro '{caminho}': {ex.Message}");
             }
         }
 
-        public void Dispose()
+        public void TocarSomEmLoop(string caminho)
         {
-            outputDevice?.Dispose();
-            audioFile?.Dispose();
+            try
+            {
+                var ms = new MemoryStream(File.ReadAllBytes(caminho));
+                var reader = new WaveFileReader(ms);
+
+                _loopStream = new LoopStream(reader);
+
+                _waveOutLoop = new WaveOutEvent();
+                _waveOutLoop.Init(_loopStream);
+                _waveOutLoop.Play();
+
+                _waveOutLoop.PlaybackStopped += (s, e) =>
+                {
+                    _waveOutLoop.Dispose();
+                    _loopStream.Dispose();
+                    reader.Dispose();
+                    ms.Dispose();
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao tocar som em loop '{caminho}': {ex.Message}");
+            }
+        }
+
+        public void PararSomEmLoop()
+        {
+            _waveOutLoop?.Stop();
         }
     }

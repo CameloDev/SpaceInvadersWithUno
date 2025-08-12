@@ -13,7 +13,11 @@
         KeyDown="Pagina_TeclaPressionada"
         KeyUp="Pagina_TeclaLiberada">
 
-        <Rectangle x:Name="RetanguloJogador" Width="40" Height="20" Fill="LimeGreen" Canvas.Left="180" Canvas.Top="550"/>
+        <Rectangle x:Name="RetanguloJogador" Width="45" Height="40" Canvas.Left="180" Canvas.Top="550" RadiusX="5" RadiusY="5">
+            <Rectangle.Fill>
+                <ImageBrush ImageSource="ms-appx:///Assets/nave.png" Stretch="Uniform"/>
+            </Rectangle.Fill>
+        </Rectangle>
         
         
         <TextBlock x:Name="TextoPontuacao" Text="PONTUAÇÃO: 0" Foreground="White" FontSize="14" Canvas.Left="10" Canvas.Top="10"/>

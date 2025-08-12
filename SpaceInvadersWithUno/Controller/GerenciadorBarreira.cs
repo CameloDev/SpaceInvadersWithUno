@@ -111,7 +111,7 @@ public class GerenciadorBarreiras
             int totalLido = stream.Read(pixels, 0, pixels.Length);
 
             if (totalLido != pixels.Length)
-                throw new IOException("A leitura do bitmap foi incompleta.");
+                throw new IOException("bitmap nao leu");
 
             for (int i = 3; i < pixels.Length; i += 4)
             {
