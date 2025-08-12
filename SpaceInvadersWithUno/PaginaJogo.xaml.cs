@@ -28,16 +28,33 @@ public sealed partial class PaginaJogo : Page
     public double AlturaCanvas => CanvasJogo.ActualHeight;
     public double PosicaoYJogador => Canvas.GetTop(RetanguloJogador);
 
+
+    // in test -- particulas
+    private const int quantidadeParticulas = 15; // adicionar ao model de particulas 
+    private readonly Random aleatorio = new Random();
+    private readonly List<Particula> particulas = new List<Particula>();
+
     public PaginaJogo()
     {
         this.InitializeComponent();
+
+        // in test-- particulas
+         CriarParticulas();
+
         _gerenciadorProjeteis = new GerenciadorProjeteis(this, som);
         _gerenciadorJogador = new GerenciadorJogador(this, som, _gerenciadorProjeteis);
         _gerenciadorInimigos = new GerenciadorInimigos(this, som, _gerenciadorProjeteis);
         _gerenciadorBarreiras = new GerenciadorBarreiras(this);
         _gerenciadorJogo = new GerenciadorJogo(this, _gerenciadorJogador, _gerenciadorInimigos, _gerenciadorProjeteis, _gerenciadorBarreiras);
 
-        this.Loaded += (s, e) => CanvasJogo.Focus(FocusState.Programmatic);
+        this.Loaded += (s, e) =>
+        {
+            CanvasJogo.Focus(FocusState.Programmatic);
+
+            // in test -- particulas
+            CriarParticulas();
+
+        };
         this.KeyDown += Pagina_TeclaPressionada;
         this.KeyUp += Pagina_TeclaLiberada;
 
@@ -61,6 +78,10 @@ public sealed partial class PaginaJogo : Page
             _gerenciadorJogo.LoopJogo();
             _gerenciadorJogador.Atualizar();
             _gerenciadorProjeteis.Atualizar();
+
+
+            // in test -- particulas
+            AtualizarParticulas();
         };
         _timerJogo.Start();
     }
@@ -174,4 +195,55 @@ public sealed partial class PaginaJogo : Page
         CanvasJogo.Children.Remove(explosao);
     }
 
+    // nao faz parte do escopo do projeto -- extra
+     private void CriarParticulas()
+        {
+            for (int i = 0; i < quantidadeParticulas; i++)
+            {
+                double angulo = aleatorio.NextDouble() * 2 * Math.PI;
+                double velocidade = 2; 
+                var particula = new Particula()
+                {
+                    Posicao = new Point(aleatorio.Next(0, (int)CanvasJogo.Width), aleatorio.Next(0, (int)CanvasJogo.Height)),
+                    Velocidade = new Point(Math.Cos(angulo) * velocidade, Math.Sin(angulo) * velocidade),
+                    Raio = aleatorio.Next(2, 4),
+                    Cor = Colors.Gray
+                };
+
+                var circulo = new Ellipse
+                {
+                    Width = particula.Raio * 2,
+                    Height = particula.Raio * 2,
+                    Fill = new SolidColorBrush(particula.Cor)
+                };
+
+                Canvas.SetLeft(circulo, particula.Posicao.X - particula.Raio);
+                Canvas.SetTop(circulo, particula.Posicao.Y - particula.Raio);
+
+                particula.Elemento = circulo;
+                particulas.Add(particula);
+                CanvasJogo.Children.Add(circulo);
+            }
+        }
+
+        private void AtualizarParticulas()
+        {
+           double largura = CanvasJogo.Width;
+           double altura = CanvasJogo.Height;
+            foreach (var particula in particulas)
+            {
+                particula.Posicao = new Point(
+                    particula.Posicao.X + particula.Velocidade.X,
+                    particula.Posicao.Y + particula.Velocidade.Y
+                );
+
+                if (particula.Posicao.X < 0) particula.Posicao = new Point(largura, particula.Posicao.Y);
+                if (particula.Posicao.X > largura) particula.Posicao = new Point(0, particula.Posicao.Y);
+                if (particula.Posicao.Y < 0) particula.Posicao = new Point(particula.Posicao.X, altura);
+                if (particula.Posicao.Y > altura) particula.Posicao = new Point(particula.Posicao.X, 0);
+
+                Canvas.SetLeft(particula.Elemento, particula.Posicao.X - particula.Raio);
+                Canvas.SetTop(particula.Elemento, particula.Posicao.Y - particula.Raio);
+            }
+        }
 }

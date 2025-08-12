@@ -28,7 +28,7 @@ namespace SpaceInvadersWithUno;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro '{caminho}': {ex.Message}");
+                Console.WriteLine($"ta errando no som: '{caminho}': {ex.Message}");
             }
         }
 
@@ -55,7 +55,7 @@ namespace SpaceInvadersWithUno;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro ao tocar som em loop '{caminho}': {ex.Message}");
+                Console.WriteLine($"ta errando no loop: '{caminho}': {ex.Message}");
             }
         }
 

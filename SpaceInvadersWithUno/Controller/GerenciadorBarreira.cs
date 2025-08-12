@@ -5,7 +5,7 @@ namespace SpaceInvadersWithUno;
     using Windows.Storage.Streams;
     using System.IO;
     using System.Runtime.InteropServices.WindowsRuntime;
-using Microsoft.UI;
+    using Microsoft.UI;
 
 public class GerenciadorBarreiras
 {
@@ -22,7 +22,7 @@ public class GerenciadorBarreiras
     {
         LimparBarreiras();
 
-        double[] posicoesX = { 50, 120, 190, 260 };
+        double[] posicoesX = { 100, 180, 260, 340 }; // ta torto
         double posicaoY = 500;
 
         foreach (var posX in posicoesX)

@@ -129,7 +129,7 @@ public class GerenciadorInimigos
             Largura = 60,
             Altura = 30
         };
-    } // desenvolvendo
+    } // desenvolvendo(mudar logica)
 
     private Rectangle CriarUIInimigo(Inimigo inimigo)
     {
@@ -152,7 +152,7 @@ public class GerenciadorInimigos
             Fill = new SolidColorBrush(Colors.Gray),
             Tag = inimigo.Pontuacao.ToString()
         };
-        // desenvolvendo
+        // desenvolvendo(adicionar imagem(nao tenho ainda) em vez de cor)
     }
 
     private void TentarAtirar()
