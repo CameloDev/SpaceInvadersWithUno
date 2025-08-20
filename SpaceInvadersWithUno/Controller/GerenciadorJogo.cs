@@ -183,7 +183,7 @@ public class GerenciadorJogo
                     int impactoLocalX = (int)Math.Round(impactoLocalXraw);
                     impactoLocalX = Math.Clamp(impactoLocalX, 0, barreira.Bitmap.PixelWidth - 1);
 
-                    double impactoLocalYraw = (projetil.Y + projetil.Altura - barreira.PosicaoY) * escalaY;
+                    double impactoLocalYraw = (projetil.Y - barreira.PosicaoY) * escalaY;
                     int impactoLocalY = (int)Math.Round(impactoLocalYraw);
                     impactoLocalY = Math.Clamp(impactoLocalY, 0, barreira.Bitmap.PixelHeight - 1);
 
