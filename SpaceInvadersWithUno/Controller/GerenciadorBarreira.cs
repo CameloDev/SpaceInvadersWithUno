@@ -22,7 +22,7 @@ public class GerenciadorBarreiras
     {
         LimparBarreiras();
 
-        double[] posicoesX = { 100, 180, 260, 340 }; // ta torto
+        double[] posicoesX = { 40, 130, 220, 310 };
         double posicaoY = 500;
 
         foreach (var posX in posicoesX)

@@ -14,6 +14,11 @@ public class GerenciadorInimigos
     private double _direcaoInimigos = 1;
     private double _velocidadeInimigos = 0.5;
     private GerenciadorProjeteis _gerenciadorProjeteis;
+    private Inimigo? _ovni;
+    private Rectangle? _ovniUI;
+    private DispatcherTimer _timerOVNI;
+    private double _direcaoOVNI = 1;
+    public Inimigo? ObterOVNI() => _ovni;
 
     public GerenciadorInimigos(PaginaJogo paginaJogo, SoundPlayer som, GerenciadorProjeteis gerenciadorProjeteis)
     {
@@ -22,6 +27,10 @@ public class GerenciadorInimigos
         Inimigos = new List<Inimigo>();
         _mapaUIInimigos = new Dictionary<Inimigo, Rectangle>();
         _gerenciadorProjeteis = gerenciadorProjeteis;
+        _timerOVNI = new DispatcherTimer();
+        _timerOVNI.Interval = TimeSpan.FromSeconds(10);
+        _timerOVNI.Tick += (s, e) => SpawnOVNI();
+        _timerOVNI.Start();
     }
 
     public void InicializarOnda(int numeroOnda)
@@ -47,6 +56,7 @@ public class GerenciadorInimigos
     {
         MoverInimigos();
         TentarAtirar();
+        AtualizarOVNI(); 
     }
 
     private void MoverInimigos()
@@ -113,23 +123,18 @@ public class GerenciadorInimigos
             PosicaoY = 50 + linha * 30 + (numeroOnda * 10),
             Pontuacao = linha == 0 ? 50 : (linha == 1 || linha == 2 ? 20 : 10),
             Largura = 40,
-            Altura = 20
+            Altura = 40
         };
-
     }
-    private Inimigo CriarInimigoOVNI(int linha, int coluna, int numeroOnda)
+    public void RemoverOVNI()
     {
-        Random rdn = new Random();
-        int randomNumber = rdn.Next(100, 200);
-        return new Inimigo
+        if (_ovni != null && _ovniUI != null)
         {
-            PosicaoX = coluna,
-            PosicaoY = linha,
-            Pontuacao = randomNumber,
-            Largura = 60,
-            Altura = 30
-        };
-    } // desenvolvendo(mudar logica)
+            _paginaJogo.RemoverDoCanvas(_ovniUI);
+            _ovni = null;
+            _ovniUI = null;
+        }
+    }
 
     private Rectangle CriarUIInimigo(Inimigo inimigo)
     {
@@ -137,22 +142,68 @@ public class GerenciadorInimigos
         {
             Width = inimigo.Largura,
             Height = inimigo.Altura,
-            Fill = inimigo.Pontuacao == 50 ? new SolidColorBrush(Colors.Red) :
-                  (inimigo.Pontuacao == 20 ? new SolidColorBrush(Colors.Yellow) :
-                   new SolidColorBrush(Colors.Green)),
+            Fill = inimigo.Pontuacao == 50 
+                ? new ImageBrush { ImageSource = new BitmapImage(new Uri("ms-appx:///Assets/alien3.png")) }
+                : (inimigo.Pontuacao == 20
+                    ? new ImageBrush { ImageSource = new BitmapImage(new Uri("ms-appx:///Assets/alien2.png")) } 
+                    : new ImageBrush { ImageSource = new BitmapImage(new Uri("ms-appx:///Assets/alien1.png")) }), 
             Tag = inimigo.Pontuacao.ToString()
         };
     }
+    private Inimigo CriarInimigoOVNI(double y, bool daEsquerda, double larguraCanvas)
+    {
+        Random rdn = new Random();
+        int randomNumber = rdn.Next(100, 300);
+
+        return new Inimigo
+        {
+            PosicaoX = daEsquerda ? -60 : larguraCanvas + 60,
+            PosicaoY = y,
+            Pontuacao = randomNumber,
+            Largura = 60,
+            Altura = 30,
+        };
+    }
+    private void SpawnOVNI()
+    {
+        if (_ovni != null) return;
+        Random rdn = new Random();
+       
+        double larguraCanvas = _paginaJogo.LarguraCanvas;
+        bool daEsquerda = rdn.Next(0, 2) == 0;
+        _ovni = CriarInimigoOVNI(20, daEsquerda, larguraCanvas);
+        _direcaoOVNI = daEsquerda ? 1 : -1;
+        _ovniUI = CriarUIInimigoOVNI(_ovni);
+
+        _paginaJogo.AdicionarAoCanvas(_ovniUI, _ovni.PosicaoX, _ovni.PosicaoY);
+    }
     private Rectangle CriarUIInimigoOVNI(Inimigo inimigo)
     {
+        string caminhoImagem = "ms-appx:///Assets/alien4.png";
+
         return new Rectangle
         {
             Width = inimigo.Largura,
             Height = inimigo.Altura,
-            Fill = new SolidColorBrush(Colors.Gray),
+            Fill =new ImageBrush { ImageSource = new BitmapImage(new Uri(caminhoImagem)) },
             Tag = inimigo.Pontuacao.ToString()
         };
-        // desenvolvendo(adicionar imagem(nao tenho ainda) em vez de cor)
+    }
+    private void AtualizarOVNI()
+    {
+        if (_ovni == null) return;
+
+        double velocidade = 2;
+
+        _ovni.PosicaoX += velocidade * _direcaoOVNI;
+        Canvas.SetLeft(_ovniUI, _ovni.PosicaoX);
+
+        if (_ovni.PosicaoX < -_ovni.Largura || _ovni.PosicaoX > _paginaJogo.LarguraCanvas + _ovni.Largura)
+        {
+            _paginaJogo.RemoverDoCanvas(_ovniUI!);
+            _ovni = null;
+            _ovniUI = null;
+        }
     }
 
     private void TentarAtirar()

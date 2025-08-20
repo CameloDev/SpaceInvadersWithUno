@@ -54,11 +54,30 @@ public class GerenciadorJogo
 
     private void VerificarColisoes()
     {
-        var projetilJogador = _gerenciadorProjeteis.ProjetilJogador;
+            var projetilJogador = _gerenciadorProjeteis.ProjetilJogador;
         if (projetilJogador != null)
         {
             var retProjetil = ExpandirRetangulo(new Rect(projetilJogador.X, projetilJogador.Y,
                                                         projetilJogador.Largura, projetilJogador.Altura), 4);
+
+            var ovni = _gerenciadorInimigos.ObterOVNI();
+            if (ovni != null)
+            {
+                var retOVNI = new Rect(ovni.PosicaoX, ovni.PosicaoY, ovni.Largura, ovni.Altura);
+                var intersecOVNI = retProjetil;
+                intersecOVNI.Intersect(retOVNI);
+
+                if (!intersecOVNI.IsEmpty)
+                {
+                    double x = ovni.PosicaoX;
+                    double y = ovni.PosicaoY;
+                    _gerenciadorInimigos.RemoverOVNI();
+                    _gerenciadorProjeteis.RemoverProjetilJogador();
+                    AdicionarPontuacao(ovni.Pontuacao);
+                    _paginaJogo.MostrarExplosao(x, y);
+                    return;
+                }
+            }
 
             foreach (var inimigo in _gerenciadorInimigos.Inimigos.ToList())
             {
@@ -274,11 +293,8 @@ public class GerenciadorJogo
         {
             FimDeJogo("Inimigos passaram suas defesas!");
         }
-        else if (Pontuacao >= 500)
-        {
-            FimDeJogo("Total de pontos alcançado");
-        }
     }
+    
 
     public void FimDeJogo(string motivo)
     {

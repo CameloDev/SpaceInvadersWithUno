@@ -9,7 +9,9 @@ namespace SpaceInvadersWithUno;
         private bool _movendoDireita = false;
         private const int VelocidadeJogador = 5;
         private GerenciadorProjeteis _gerenciadorProjeteis;
-
+        public bool MovendoEsquerda => _movendoEsquerda;
+        public bool MovendoDireita => _movendoDireita;  
+        private int _vidasExtrasConcedidas = 0;
         public GerenciadorJogador(PaginaJogo paginaJogo, SoundPlayer som, GerenciadorProjeteis gerenciadorProjeteis)
     {
         Jogador = new Jogador();
@@ -79,13 +81,13 @@ namespace SpaceInvadersWithUno;
         public void VerificarVidaExtra(int pontuacao)
         {
             int vidasGanhas = pontuacao / 1000;
-            int vidasExtras = vidasGanhas - (Jogador.Vidas - 3);
 
-            if (vidasExtras > 0 && Jogador.Vidas < 6)
+            if (vidasGanhas > _vidasExtrasConcedidas && Jogador.Vidas < 6)
             {
-                Jogador.Vidas += vidasExtras;
+                Jogador.Vidas++;
+                _vidasExtrasConcedidas++;
                 _som.TocarSom("Assets/vida_extra.wav");
-            } // arrumando erro, quando recebe o primeiro dano o verify esta recebendo +1 antes dos 1000
+            }
         }
 
         public void TeclaPressionada(Windows.System.VirtualKey tecla)

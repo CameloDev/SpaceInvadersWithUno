@@ -39,7 +39,7 @@ public sealed partial class PaginaJogo : Page
         this.InitializeComponent();
 
         // in test-- particulas
-         CriarParticulas();
+        CriarParticulas();
 
         _gerenciadorProjeteis = new GerenciadorProjeteis(this, som);
         _gerenciadorJogador = new GerenciadorJogador(this, som, _gerenciadorProjeteis);
@@ -183,11 +183,11 @@ public sealed partial class PaginaJogo : Page
             Width = 40,
             Height = 40,
             Source = new BitmapImage(new Uri("ms-appx:///Assets/explosao.png")),
-            Stretch = Stretch.UniformToFill
+            Stretch = Stretch.Uniform
         };
 
         AdicionarAoCanvas(explosao, x, y);
-
+        Canvas.SetZIndex(explosao, -1);
         som.TocarSom("Assets/explosao.wav");
 
         await Task.Delay(800);
@@ -195,55 +195,70 @@ public sealed partial class PaginaJogo : Page
         CanvasJogo.Children.Remove(explosao);
     }
 
-    // nao faz parte do escopo do projeto -- extra
-     private void CriarParticulas()
+    private void CriarParticulas()
+    {
+        for (int i = 0; i < quantidadeParticulas; i++)
         {
-            for (int i = 0; i < quantidadeParticulas; i++)
+            double angulo = aleatorio.NextDouble() * 2 * Math.PI;
+            double velocidade = 2;
+            var particula = new Particula()
             {
-                double angulo = aleatorio.NextDouble() * 2 * Math.PI;
-                double velocidade = 2; 
-                var particula = new Particula()
-                {
-                    Posicao = new Point(aleatorio.Next(0, (int)CanvasJogo.Width), aleatorio.Next(0, (int)CanvasJogo.Height)),
-                    Velocidade = new Point(Math.Cos(angulo) * velocidade, Math.Sin(angulo) * velocidade),
-                    Raio = aleatorio.Next(2, 4),
-                    Cor = Colors.Gray
-                };
+                Posicao = new Point(aleatorio.Next(0, (int)CanvasJogo.Width), aleatorio.Next(0, (int)CanvasJogo.Height)),
+                Velocidade = new Point(Math.Cos(angulo) * velocidade, Math.Sin(angulo) * velocidade),
+                Raio = aleatorio.Next(2, 4),
+                Cor = Colors.Gray
+            };
 
-                var circulo = new Ellipse
-                {
-                    Width = particula.Raio * 2,
-                    Height = particula.Raio * 2,
-                    Fill = new SolidColorBrush(particula.Cor)
-                };
+            var circulo = new Ellipse // irei ver se acho algo mais leve
+            {
+                Width = particula.Raio * 2,
+                Height = particula.Raio * 2,
+                Fill = new SolidColorBrush(particula.Cor)
+            };
 
-                Canvas.SetLeft(circulo, particula.Posicao.X - particula.Raio);
-                Canvas.SetTop(circulo, particula.Posicao.Y - particula.Raio);
+            Canvas.SetLeft(circulo, particula.Posicao.X - particula.Raio);
+            Canvas.SetTop(circulo, particula.Posicao.Y - particula.Raio);
 
-                particula.Elemento = circulo;
-                particulas.Add(particula);
-                CanvasJogo.Children.Add(circulo);
-            }
+            particula.Elemento = circulo;
+            particulas.Add(particula);
+            CanvasJogo.Children.Add(circulo);
         }
+    }
 
-        private void AtualizarParticulas()
+    private void AtualizarParticulas()
+    {
+        double largura = CanvasJogo.Width;
+        double altura = CanvasJogo.Height;
+
+        double forcaX = 0;
+        if (_gerenciadorJogador.MovendoEsquerda) forcaX = 1.5;
+        else if (_gerenciadorJogador.MovendoDireita) forcaX = -1.5;
+
+        foreach (var particula in particulas)
         {
-           double largura = CanvasJogo.Width;
-           double altura = CanvasJogo.Height;
-            foreach (var particula in particulas)
+            if (forcaX == 0)
+            {
+                double ruidoX = (aleatorio.NextDouble() - 0.5) * 0.3;
+                double ruidoY = (aleatorio.NextDouble() - 0.5) * 0.3;
+                particula.Posicao = new Point(
+                    particula.Posicao.X + particula.Velocidade.X * 0.3 + ruidoX,
+                    particula.Posicao.Y + particula.Velocidade.Y * 0.3 + ruidoY
+                );
+            }
+            else
             {
                 particula.Posicao = new Point(
-                    particula.Posicao.X + particula.Velocidade.X,
+                    particula.Posicao.X + particula.Velocidade.X + forcaX,
                     particula.Posicao.Y + particula.Velocidade.Y
                 );
-
-                if (particula.Posicao.X < 0) particula.Posicao = new Point(largura, particula.Posicao.Y);
-                if (particula.Posicao.X > largura) particula.Posicao = new Point(0, particula.Posicao.Y);
-                if (particula.Posicao.Y < 0) particula.Posicao = new Point(particula.Posicao.X, altura);
-                if (particula.Posicao.Y > altura) particula.Posicao = new Point(particula.Posicao.X, 0);
-
-                Canvas.SetLeft(particula.Elemento, particula.Posicao.X - particula.Raio);
-                Canvas.SetTop(particula.Elemento, particula.Posicao.Y - particula.Raio);
             }
+            if (particula.Posicao.X < 0) particula.Posicao = new Point(largura, particula.Posicao.Y);
+            if (particula.Posicao.X > largura) particula.Posicao = new Point(0, particula.Posicao.Y);
+            if (particula.Posicao.Y < 0) particula.Posicao = new Point(particula.Posicao.X, altura);
+            if (particula.Posicao.Y > altura) particula.Posicao = new Point(particula.Posicao.X, 0);
+
+            Canvas.SetLeft(particula.Elemento, particula.Posicao.X - particula.Raio);
+            Canvas.SetTop(particula.Elemento, particula.Posicao.Y - particula.Raio);
         }
+    }
 }
