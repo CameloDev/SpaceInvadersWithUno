@@ -8,6 +8,6 @@
         <TextBlock Text="SPACE INVADERS" FontSize="36" Foreground="White" TextAlignment="Center"/>
         <Button Content="Iniciar Jogo" Click="StartGame_Click"/>
         <Button Content="Ver Placar" />
-        <Button Content="Ver Controles" />
+        <Button Content="Ver Controles" Click="VerControles_Click"/>
     </StackPanel>
 </Page>

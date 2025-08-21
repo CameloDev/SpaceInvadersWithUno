@@ -10,4 +10,8 @@ public sealed partial class MainPage : Page
     {
         this.Frame.Navigate(typeof(PaginaJogo));
     }
+    private void VerControles_Click(object sender, RoutedEventArgs e)
+    {
+        Frame.Navigate(typeof(PaginaControles));
+    }
 }
