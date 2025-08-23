@@ -296,10 +296,38 @@ public class GerenciadorJogo
     }
     
 
-    public void FimDeJogo(string motivo)
+    public async void FimDeJogo(string motivo)
     {
+        if (JogoTerminado) 
+            return;
         JogoTerminado = true;
         _paginaJogo.MostrarDialogoFimDeJogo(motivo, Pontuacao);
+
+        var dialog = new ContentDialog
+        {
+            Title = "Fim de Jogo",
+            Content = "Digite seu nome para salvar a pontuação:",
+            PrimaryButtonText = "Salvar",
+            CloseButtonText = "Cancelar"
+        };
+
+        var input = new TextBox { PlaceholderText = "Seu nome" };
+        dialog.Content = input;
+        dialog.XamlRoot = _paginaJogo.XamlRoot;
+
+        var resultado = await dialog.ShowAsync();
+
+        if (resultado == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(input.Text))
+        {
+            SalvarPontuacao(input.Text, Pontuacao);
+        }
+    }
+    private void SalvarPontuacao(string nome, int pontuacao)
+    {
+        string caminho = "scores.txt"; // Ele vai salvar no diretório do app
+        string linha = $"{DateTime.Now:dd/MM/yyyy HH:mm} - {nome} - {pontuacao} pontos";
+
+        File.AppendAllText(caminho, linha + Environment.NewLine);
     }
 
     public void AdicionarPontuacao(int pontos)

@@ -4,10 +4,23 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Background="Black">
 
-    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="20">
-        <TextBlock Text="SPACE INVADERS" FontSize="36" Foreground="White" TextAlignment="Center"/>
-        <Button Content="Iniciar Jogo" Click="StartGame_Click"/>
-        <Button Content="Ver Placar" />
-        <Button Content="Ver Controles" Click="VerControles_Click"/>
-    </StackPanel>
+    <Grid>
+        <Canvas x:Name="ParticleCanvas"
+                IsHitTestVisible="False"/>
+
+        <StackPanel HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="20">
+            <TextBlock Text="SPACE INVADERS"
+                       FontSize="36"
+                       Foreground="White"
+                       TextAlignment="Center"/>
+            <Button Content="Iniciar Jogo"
+                    Click="StartGame_Click"/>
+            <Button Content="Ver Placar"
+                    Click="VerPlacar_Click"/>
+            <Button Content="Ver Controles"
+                    Click="VerControles_Click"/>
+        </StackPanel>
+    </Grid>
 </Page>
