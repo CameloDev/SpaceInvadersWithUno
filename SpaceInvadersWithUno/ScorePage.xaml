@@ -6,15 +6,17 @@
 
     <Grid Padding="20">
         <StackPanel Spacing="15">
-            <TextBlock Text="PLACAR DE JOGADORES" 
-                       FontSize="28" 
-                       Foreground="White" 
-                       HorizontalAlignment="Center"/>
+            <TextBlock
+                    Text="PLACAR DE JOGADORES" 
+                    FontSize="28" 
+                    Foreground="White" 
+                    HorizontalAlignment="Center"/>
 
             <ListView x:Name="ScoresList" 
-                      Background="Transparent" 
-                      BorderThickness="0"
-                      Foreground="White">
+                    Background="Transparent" 
+                    BorderThickness="0"
+                    Foreground="White"
+                    HorizontalAlignment="Center">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal" Spacing="10">
@@ -26,7 +28,10 @@
                 </ListView.ItemTemplate>
             </ListView>
 
-            <Button Content="Voltar" Click="Voltar_Click"/>
+            <Button
+                Content="Voltar" 
+                Click="Voltar_Click"
+                HorizontalAlignment="Center"/>
         </StackPanel>
     </Grid>
 </Page>

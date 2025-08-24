@@ -324,7 +324,7 @@ public class GerenciadorJogo
     }
     private void SalvarPontuacao(string nome, int pontuacao)
     {
-        string caminho = "scores.txt"; // Ele vai salvar no diretório do app
+        string caminho = "scores.txt";
         string linha = $"{DateTime.Now:dd/MM/yyyy HH:mm} - {nome} - {pontuacao} pontos";
 
         File.AppendAllText(caminho, linha + Environment.NewLine);
