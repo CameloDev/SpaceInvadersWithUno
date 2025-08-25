@@ -50,13 +50,15 @@ SpaceInvadersWithUno/
 │   ├── GerenciadorJogador.cs
 │   ├── GerenciadorInimigos.cs
 │   ├── GerenciadorProjeteis.cs
+│   ├── GerenciadorParticulas.cs
 │   └── GerenciadorBarreiras.cs
 ├── Models/
 │   ├── Barreira.cs
 │   ├── Inimigo.cs
 │   ├── Jogador.cs
 │   ├── Projetil.cs
-│   └── Particula.cs
+│   └── ToView/
+│       └── Particulas.cs
 ├── Views/
 │   ├── PaginaJogo.xaml
 │   ├── PaginaJogo.xaml.cs
@@ -64,7 +66,9 @@ SpaceInvadersWithUno/
 │   └── MainPage.xaml.cs
 ├── Assets/
 │   └── (Recursos visuais e sonoros)
-└── SoundPlayer.cs
+└── Utils/
+    ├── LoopStream.cs 
+    └── SoundPlayer.cs
 ```
 
 ### Padrão MVVM e Separação de Responsabilidades
